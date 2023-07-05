@@ -16,7 +16,7 @@ android {
         minSdk 28
         targetSdk 33
 
-        version = '1.0.0'
+        version = '1.0.14'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -30,8 +30,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     kotlinOptions {
         jvmTarget = '1.8'
@@ -54,7 +54,7 @@ publishing {
         release(MavenPublication) {
             groupId = 'com.github.t109368015'
             artifactId = 'YsBT'
-            version = '1.0.13'
+            version = '1.0.14'
 
             afterEvaluate {
                 from components.release
