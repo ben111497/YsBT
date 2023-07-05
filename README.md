@@ -31,7 +31,7 @@ allprojects {
 
 ```
 dependencies {
-	implementation 'com.github.t109368015:YsBT:v1.0.0'
+	implementation 'com.github.t109368015:YsBT:v1.1.0'
 }
 ```
 

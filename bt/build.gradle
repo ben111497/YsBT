@@ -16,7 +16,7 @@ android {
         minSdk 28
         targetSdk 33
 
-        version = '1.0.14'
+        version = '1.1.0'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -54,7 +54,7 @@ publishing {
         release(MavenPublication) {
             groupId = 'com.github.t109368015'
             artifactId = 'YsBT'
-            version = '1.0.14'
+            version = 'v1.1.0'
 
             afterEvaluate {
                 from components.release

@@ -1,0 +1,52 @@
+# commit log 請遵守以下格式，並注意半形冒號後面有一個空格
+#
+# 一個正確的 Git commit subject應該要能夠代入下面的句型，使之成為完整的句子
+# If applied, this commit will <你的標題>
+# 比如：If applied, this commit will release version 1.0.0
+# 
+#  ----------------------- <Type> ----------------------------------
+# | feat: 新增/修改功能 (feature)
+# | fix: Bug修復
+# | docs: 文檔改變
+# | style: 格式 (不影響程式碼運行的變動)
+# | refactor: 重構(既不是新增功能，也不是修補 bug 的程式碼變動)
+# | perf: 改善效能
+# | add: 增加一些跟功能無關的檔案
+# | 3rd: 增加第三方
+# | chore: 建構程序或輔助工具的變動
+#  -----------------------------------------------------------------
+# 
+# <type>: <subject> { 用來簡要描述影響本次變動，概述即可 - 必填 }
+# |<----   Preferably using up to 50 chars   --->|
+
+
+
+# <body> { 具體的修改訊息，越詳細越好 - 選填 }
+# |<----   Try To Limit Each Line to a Maximum Of 72 Characters   ---->|
+
+
+
+# <footer> { 此次 commit 關閉 GitHub issue 的地方 - 選填 }
+# |<----   Try To Limit Each Line to a Maximum Of 72 Characters   ---->|
+
+
+
+# --------------------
+# Remember to:
+# * Capitalize the subject line 主旨首字大寫
+# * Use the imperative mood in the subject line 使用祈使句
+# * Do not end the subject line with a period 不要加句點
+# * Separate subject from body with a blank line 主旨和內容間空一行
+# * Use multiple lines with "-" for bullet points in body 多行內容開頭加 "-"
+# --------------------
+
+
+##=======================================================================
+# Sample
+# add: Implement automated commit messages
+# 
+# - Found some documentations about commit messages
+# - This template follows angular standard 
+# - Guildline: https://reurl.cc/V5noKA
+#
+# Close #2
