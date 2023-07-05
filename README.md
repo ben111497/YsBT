@@ -52,8 +52,9 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
       btHelper = BTHelper(this, this)
   }
 
-  override fun onRequestPermission(list: ArrayList<String>) { checkAndRequestPermission(list[0], 0) }
-
+  override fun onRequestPermission(list: ArrayList<String>) {
+	//TODO("Not yet implemented")
+  }
   override fun onScanDeviceResult(device: BluetoothDevice, scanRecord: Binary, rssi: Int) {
        //TODO("Not yet implemented")
   }
