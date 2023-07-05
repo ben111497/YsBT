@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/black"
+        tools:context=".sample.SampleActivity">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/clBTNotOpen"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@color/gray_3E3A34"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+                android:text="Bluetooth adapter is disabled"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:id="@+id/textView2" app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginTop="16dp" android:layout_marginBottom="16dp" android:layout_marginStart="16dp"/>
+        <TextView
+                android:id="@+id/tvEnable"
+                android:text="ENABLE"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:textColor="@color/white"
+                android:textStyle="bold"
+                android:gravity="center"
+                app:layout_constraintEnd_toEndOf="parent" app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toEndOf="@+id/textView2"
+                android:layout_marginEnd="16dp" app:layout_constraintHorizontal_bias="1.0"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+    <EditText
+            android:layout_width="0dp"
+            android:layout_height="51dp"
+            android:inputType="textPersonName"
+            android:text=""
+            android:hint="search"
+            android:ems="10"
+            android:id="@+id/edSearch"
+            app:layout_constraintEnd_toStartOf="@+id/imgSearch" android:layout_marginEnd="8dp" android:minHeight="48dp"
+            app:layout_constraintStart_toEndOf="@+id/btnScan" android:layout_marginStart="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/clBTNotOpen" android:layout_marginTop="16dp"/>
+    <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" app:srcCompat="@android:drawable/ic_menu_search"
+            android:id="@+id/imgSearch" app:layout_constraintEnd_toEndOf="parent"
+            android:padding="2.5dp"
+            app:layout_constraintTop_toTopOf="@+id/edSearch"
+            app:layout_constraintBottom_toBottomOf="@+id/edSearch" android:layout_marginEnd="16dp"/>
+
+    <ListView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:id="@+id/listView"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/edSearch"
+            android:layout_marginTop="8dp"
+            app:layout_constraintBottom_toTopOf="@+id/pbLoad"/>
+    <Button
+            android:id="@+id/btnScan"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Scan"
+            android:textSize="24dp"
+            app:layout_constraintTop_toTopOf="@+id/edSearch"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="16dp"
+            app:layout_constraintBottom_toBottomOf="@+id/edSearch"/>
+
+    <ProgressBar
+            android:id="@+id/pbLoad"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"
+            android:visibility="gone"/>
+    <ProgressBar
+            style="?android:attr/progressBarStyle"
+            android:layout_width="0dp"
+            android:layout_height="100dp"
+            android:id="@+id/pbBTScan"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent" android:visibility="gone"/>
+    <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/clDetail"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:background="@color/black"
+            android:focusable="true"
+            android:clickable="true"
+            android:translationZ="5dp"
+            tools:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" android:visibility="gone">
+
+        <ListView
+                android:id="@+id/lvDetail"
+                android:layout_width="match_parent"
+                android:divider="@android:color/transparent"
+                android:dividerHeight="0dp"
+                android:layout_height="0dp" app:layout_constraintTop_toBottomOf="@+id/tvUUID"
+                app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" android:layout_marginTop="8dp"/>
+        <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/clInput"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:background="#555555"
+                app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" android:visibility="gone" tools:visibility="gone">
+
+            <RadioGroup
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content" app:layout_constraintEnd_toEndOf="parent"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    app:layout_constraintStart_toStartOf="parent" android:layout_marginTop="8dp"
+                    app:layout_constraintTop_toBottomOf="@+id/edInput" android:id="@+id/rgType"
+                    android:layout_marginStart="16dp" android:layout_marginEnd="16dp">
+                <RadioButton
+                        android:text="Hex"
+                        android:layout_marginEnd="16dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" android:id="@+id/rbHex"/>
+                <RadioButton
+                        android:text="String"
+                        android:layout_marginEnd="16dp"
+                        android:checked="true"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" android:id="@+id/rbString"/>
+                <RadioButton
+                        android:text="ByteArray"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" android:id="@+id/rbByteArray"/>
+            </RadioGroup>
+            <EditText
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPersonName"
+                    android:text=""
+                    android:hint="input"
+                    android:ems="10"
+                    android:id="@+id/edInput" android:layout_marginEnd="16dp"
+                    app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"
+                    android:layout_marginStart="16dp" app:layout_constraintTop_toTopOf="parent"
+                    android:layout_marginTop="16dp" android:minHeight="48dp"/>
+            <Button
+                    android:id="@+id/btnSend"
+                    android:text="Send"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintTop_toBottomOf="@+id/rgType"
+                    app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="16dp"
+                    app:layout_constraintBottom_toBottomOf="parent" android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"/>
+            <Button
+                    android:id="@+id/btnCancel"
+                    android:text="cancel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="16dp"
+                    app:layout_constraintBottom_toBottomOf="@+id/btnSend"
+                    app:layout_constraintTop_toTopOf="@+id/btnSend"/>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+        <ImageView
+                android:id="@+id/imgDisconnect"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" app:srcCompat="@android:drawable/btn_dialog"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" android:layout_marginTop="16dp"
+                android:layout_marginEnd="8dp"/>
+        <TextView
+                android:text="unKnow"
+                android:id="@+id/tvName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:textSize="20dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" android:layout_marginTop="16dp"
+                android:layout_marginStart="16dp" app:layout_constraintEnd_toStartOf="@+id/imgDisconnect"/>
+        <TextView
+                android:id="@+id/tvMac"
+                android:text="-"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                app:layout_constraintTop_toBottomOf="@+id/tvName" android:layout_marginTop="8dp"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginStart="16dp" app:layout_constraintEnd_toStartOf="@+id/imgDisconnect"/>
+        <TextView
+                android:id="@+id/tvUUID"
+                android:text="-"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                app:layout_constraintTop_toBottomOf="@+id/tvMac" app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="@+id/tvMac"
+                android:layout_marginStart="16dp" android:layout_marginTop="8dp"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
