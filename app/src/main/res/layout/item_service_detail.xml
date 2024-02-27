@@ -24,36 +24,60 @@
                 app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"
                 android:layout_marginTop="8dp" app:layout_constraintEnd_toEndOf="parent"
                 android:layout_marginEnd="16dp" android:layout_marginStart="16dp"/>
+
         <TextView
-                android:id="@+id/uuid"
-                android:text="UUID:"
-                android:textColor="@color/white"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintStart_toStartOf="@+id/tvStatus" app:layout_constraintTop_toBottomOf="@+id/tvStatus"
-                android:layout_marginTop="8dp"/>
+            android:id="@+id/uuid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:text="UUID:"
+            android:textSize="20dp"
+            android:textColor="@color/white"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvStatus" />
+
         <TextView
-                android:id="@+id/tvAddress"
-                android:text="-"
-                android:textColor="@color/white"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                app:layout_constraintTop_toBottomOf="@+id/tvStatus"
-                android:layout_marginTop="8dp"
-                app:layout_constraintStart_toEndOf="@+id/uuid"
-                android:layout_marginStart="8dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginEnd="16dp"/>
+            android:id="@+id/tvAddress"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="16dp"
+            android:text="-"
+            android:textColor="@color/white"
+            android:textSize="20dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/uuid"
+            app:layout_constraintTop_toBottomOf="@+id/tvStatus" />
+
         <TextView
-                android:id="@+id/tvService"
-                android:text="-"
-                android:textColor="@color/white"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                app:layout_constraintTop_toBottomOf="@+id/uuid"
-                app:layout_constraintStart_toStartOf="@+id/uuid"
-                android:layout_marginTop="8dp" android:layout_marginEnd="16dp"
-                app:layout_constraintEnd_toEndOf="parent"/>
+            android:id="@+id/tvService"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="16dp"
+            android:text="0x00 0x10 0x20 0x30"
+            android:textColor="#FFEB3B"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvTime" />
+
+        <TextView
+            android:id="@+id/tvTime"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="16dp"
+            android:text="time"
+            android:textColor="@color/teal_200"
+            android:textSize="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvAddress" />
+
         <LinearLayout
                 android:id="@+id/llTest"
                 android:orientation="vertical"

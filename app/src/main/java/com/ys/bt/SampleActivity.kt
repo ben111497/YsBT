@@ -1,32 +1,106 @@
 package com.ys.bt
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.bluetooth.*
+import android.content.ContentValues
 import android.content.Context
 import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import android.provider.MediaStore
+import android.text.Editable
+import android.text.TextWatcher
+import android.util.Log
 import android.view.View
+import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.ys.bt.databinding.ActivitySampleBinding
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Timer
+import java.util.TimerTask
 import kotlin.collections.ArrayList
-import kotlin.collections.HashSet
+import kotlin.math.abs
 
 class SampleActivity : AppCompatActivity(), BTCallBack {
     private lateinit var binding: ActivitySampleBinding
-    private lateinit var deviceListAdapter: BTListAdapter
-    private lateinit var detailAdapter: BTDetailAdapter
+    private lateinit var adapter: BTSpecifyAdapter
     private lateinit var btHelper: BTHelper
-    private val devices = HashSet<BluetoothDevice>()
-    private val selectedDevices = ArrayList<BluetoothDevice>()
+    private var dataList = ArrayList<BTSpecifyAdapter.BTData>()
+    private var specifyMac = ""
+    private var timeTag = System.currentTimeMillis()
+    private var log = ""
+    private val savePerMinute = 1
+    private val maxLog = 300
+    private var timer: Timer = Timer()
+    private var originSize = 0
+    private val textWatcher = object : TextWatcher {
+        override fun beforeTextChanged(charSequence: CharSequence?, start: Int, count: Int, after: Int) {
+            originSize = binding.edSearch.text.length
+        }
+
+        override fun onTextChanged(charSequence: CharSequence?, start: Int, before: Int, count: Int) {}
+
+        override fun afterTextChanged(editable: Editable?) {
+            //formatBluetoothMac(binding.edSearch)
+        }
+    }
 
     override fun onRequestPermission(list: ArrayList<String>) { checkAndRequestPermission(list[0], 0) }
 
-    override fun onScanDeviceResult(device: BluetoothDevice, scanRecord: Binary, rssi: Int) { devices.add(device) }
+    override fun onScanDeviceResult(device: BluetoothDevice, scanRecord: Binary, rssi: Int) {
+        if (device.address.uppercase().contains(specifyMac.uppercase())) {
+            val res = scanRecord.toHEX().replace("0x", "").substring(0, 60)
+            var data = ""
+            for (i in res.indices step 2) {
+                data += "0x${res.substring(i, i + 2)} "
+            }
+
+            val date = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date())
+            dataList.add(BTSpecifyAdapter.BTData(device.address, date, data))
+            if (dataList.size > maxLog) {
+                val halfSize = dataList.size / 2
+                dataList = ArrayList(dataList.subList(halfSize, dataList.size))
+            }
+
+            log += "$date\n${device.address} -> \n$data\n\n"
+            Log.e("scanBack", "device: ${device.address}, byteArray: $data")
+
+            val current = System.currentTimeMillis()
+            try {
+                if (abs(current - timeTag) > savePerMinute * 60 * 1000) {
+                    val values = ContentValues().apply {
+                        put(MediaStore.Images.Media.RELATIVE_PATH, "Download/BT_Log")
+                        put(MediaStore.Images.Media.DISPLAY_NAME, "BT_Log_${SimpleDateFormat("yyyy-MM-dd_HH.mm.ss").format(Date(timeTag))}.txt")
+                        put(MediaStore.Files.FileColumns.MIME_TYPE, "text/plain")
+                    }
+
+                    val resolver = contentResolver
+                    val uri: Uri? = resolver.insert(MediaStore.Files.getContentUri("external"), values)
+
+                    if (uri != null) {
+                        resolver.openOutputStream(uri)?.use { outputStream ->
+                            outputStream.write(log.toByteArray())
+                        }
+                    }
+
+                    timeTag = current
+                    log = ""
+                    Log.e("sys:", "local save succeed, path: ${uri?.path}")
+                    runOnUiThread { Toast.makeText(this, "local save succeed", Toast.LENGTH_SHORT).show() }
+                }
+            } catch (e: Exception) {
+                timeTag = current
+                Log.e("sys:", "local save failed: ${e.message}")
+            }
+        }
+    }
 
     override fun onStatusChange(status: Int) {
         when (status) {
@@ -45,11 +119,7 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
         //TODO("Not yet implemented")
     }
 
-    override fun onConnectionStateChange(isConnect: Boolean, serviceList: List<BluetoothGattService>?) {
-        runOnUiThread {
-            if (isConnect && serviceList != null) detailFragment(serviceList) else Toast.makeText(this@SampleActivity, "Connect error", Toast.LENGTH_SHORT).show()
-        }
-    }
+    override fun onConnectionStateChange(isConnect: Boolean, serviceList: List<BluetoothGattService>?) {}
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
@@ -64,14 +134,21 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySampleBinding.inflate(layoutInflater)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContentView(binding.root)
         init()
         setListener()
     }
+
     private fun init() {
         if (checkAndRequestPermission(Manifest.permission.BLUETOOTH_CONNECT, 1) &&
             checkAndRequestPermission(Manifest.permission.BLUETOOTH_SCAN, 2) && checkAndRequestPermission(Manifest.permission.BLUETOOTH_SCAN, 3)) {
             initBTHelper()
+        }
+
+        if (!::adapter.isInitialized) {
+            adapter = BTSpecifyAdapter(this, dataList)
+            binding.listView.adapter = adapter
         }
     }
 
@@ -83,129 +160,38 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
     private fun setListener() {
         binding.run {
             btnScan.setOnClickListener {
-                if (!checkBT()) return@setOnClickListener
-                devices.clear()
-                selectedDevices.clear()
-                btHelper.scanDevice()
-                binding.pbBTScan.visibility = View.VISIBLE
-                Handler(Looper.myLooper()!!).postDelayed({
-                    runOnUiThread {
-                        btHelper.stopScanDevice()
-                        binding.pbBTScan.visibility = View.GONE
-                        setDeviceListView()
-                    } }, 1000)
-            }
-
-            tvEnable.setOnClickListener {
-                if (!checkBT()) return@setOnClickListener
-                btHelper.openBT()
-            }
-
-            imgDisconnect.setOnClickListener {
-                if (!checkBT()) return@setOnClickListener
-                btHelper.disConnect()
-                clDetail.visibility = View.GONE
-            }
-
-            imgSearch.setOnClickListener {
-                if (!checkBT()) return@setOnClickListener
-                if (!checkPermission()) return@setOnClickListener
-
-                if (binding.edSearch.text.isEmpty()) {
-                    selectedDevices.clear()
-                    selectedDevices.addAll(devices)
-                } else {
-                    val list = ArrayList<BluetoothDevice>()
-                    list.addAll(ArrayList(devices))
-                    list.removeAll { it.name == null }
-                    selectedDevices.clear()
-                    selectedDevices.addAll(ArrayList(list.filter { it.name.lowercase().contains(binding.edSearch.text.toString().lowercase()) }))
-                }
-
-                deviceListAdapter.notifyDataSetChanged()
-
                 val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                 inputMethodManager.hideSoftInputFromWindow(binding.edSearch.windowToken, 0)
-            }
-        }
-    }
+                if (!checkBT()) return@setOnClickListener
+                btHelper.scanDevice()
+                specifyMac = binding.edSearch.text.toString()
 
-    private fun setDeviceListView() {
-        if (!checkPermission()) return
-
-        if (binding.edSearch.text.toString().isNotEmpty())
-            selectedDevices.addAll(devices.filter { it.name != null && it.name.lowercase().contains(binding.edSearch.text.toString().lowercase()) })
-        else
-            selectedDevices.addAll(devices)
-
-        if (!::deviceListAdapter.isInitialized) {
-            deviceListAdapter = BTListAdapter(this, selectedDevices)
-            deviceListAdapter.setListener(object: BTListAdapter.BTListClickListener {
-                override fun onClick(device: BluetoothDevice) {
-                    Toast.makeText(this@SampleActivity, "Connecting..", Toast.LENGTH_SHORT).show()
-                    btHelper.connect(device.address)
-                }
-            })
-            binding.listView.adapter = deviceListAdapter
-        }
-        deviceListAdapter.notifyDataSetChanged()
-    }
-
-    private fun detailFragment(serviceList: List<BluetoothGattService>) {
-        binding.run {
-            clDetail.visibility = View.VISIBLE
-            tvUUID.visibility = View.GONE
-            detailAdapter = BTDetailAdapter(this@SampleActivity, serviceList)
-            detailAdapter.setListener(object: BTDetailAdapter.BTListClickListener {
-                override fun onSend(service: BluetoothGattService, characteristic: BluetoothGattCharacteristic) {
-                    if (!checkPermission()) return
-                    binding.clInput.visibility = View.VISIBLE
-
-                    binding.btnSend.setOnClickListener {
-                        if (!btHelper.isBTOpen) return@setOnClickListener
-
-                        //因輸入沒有 byteArray 所以皆以 hex表示，若有需要再自行更改。
-                        val type = when (binding.rgType.checkedRadioButtonId) {
-                            binding.rbHex.id, binding.rbByteArray.id -> BTHelper.DataType.Hex
-                            else -> BTHelper.DataType.String
+                timer.schedule(object : TimerTask() {
+                    override fun run() {
+                        runOnUiThread {
+                            if (::adapter.isInitialized) {
+                                adapter.notifyDataSetChanged()
+                                //binding.listView.smoothScrollToPosition( binding.listView.count - 1)
+                            }
                         }
-
-                        //btHelper.send(service.uuid, characteristic.uuid, binding.edInput.text.toString(), type)
-                        btHelper.sendByCharacteristic(characteristic, binding.edInput.text.toString(), type)
-                        binding.edInput.setText("")
-                        binding.clInput.visibility = View.GONE
-
-                        val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                        inputMethodManager.hideSoftInputFromWindow(binding.edInput.windowToken, 0)
                     }
+                }, 0, if (specifyMac.isEmpty()) 2000 else 250)
+            }
 
-                    binding.btnCancel.setOnClickListener {
-                        if (!btHelper.isBTOpen) return@setOnClickListener
-                        binding.edInput.setText("")
-                        binding.clInput.visibility = View.GONE
+            btStop.setOnClickListener {
+                val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                inputMethodManager.hideSoftInputFromWindow(binding.edSearch.windowToken, 0)
+                if (!checkBT()) return@setOnClickListener
+                btHelper.stopScanDevice()
+                timer.purge()
+            }
 
-                        val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                        inputMethodManager.hideSoftInputFromWindow(binding.edInput.windowToken, 0)
-                    }
-                }
-
-                override fun onGet(service: BluetoothGattService, characteristic: BluetoothGattCharacteristic) {
-                    //btHelper.descriptorChannel(service.uuid, characteristic.uuid)
-                    btHelper.descriptorChannelByCharacteristic(characteristic)
-                }
-            })
-            lvDetail.adapter = detailAdapter
-            detailAdapter.notifyDataSetChanged()
+            edSearch.addTextChangedListener(textWatcher)
         }
     }
 
     private fun btStatusChange(isOpen: Boolean) {
         binding.clBTNotOpen.visibility = if (isOpen) View.GONE else View.VISIBLE
-        if (!isOpen && ::deviceListAdapter.isInitialized) {
-            devices.clear()
-            selectedDevices.clear()
-            deviceListAdapter.clear()
-        }
     }
 
     private fun checkBT(): Boolean {
@@ -216,17 +202,45 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
         } else true
     }
 
-    fun checkPermission(): Boolean {
-        if (!checkAndRequestPermission(Manifest.permission.ACCESS_COARSE_LOCATION, 0)) return false
-        if (!checkAndRequestPermission(Manifest.permission.BLUETOOTH_CONNECT, 1)) return false
-        if (!checkAndRequestPermission(Manifest.permission.BLUETOOTH_SCAN, 2)) return false
-        return true
-    }
-
     fun checkAndRequestPermission(permission: String, TAG: Int): Boolean {
         return if (ActivityCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, Array<String>(1) { permission }, TAG)
             false
         } else true
+    }
+
+    fun askPermission(): Boolean {
+        return if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            true
+        } else {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 123)
+            false
+        }
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun formatBluetoothMac(ed: EditText) {
+        ed.removeTextChangedListener(textWatcher)
+
+        ed.setText(ed.text.replace(Regex("[^0-9A-Fa-f:]"), ""))
+        if (originSize == 1 && ed.text.length == 2) {
+            ed.setText(ed.text.toString() + ":")
+        }
+
+        when (originSize to ed.text.length) {
+            1 to 2 -> ed.setText(ed.text.toString() + ":")
+            4 to 5 -> ed.setText(ed.text.toString() + ":")
+            7 to 8 -> ed.setText(ed.text.toString() + ":")
+            10 to 11 -> ed.setText(ed.text.toString() + ":")
+            13 to 14 -> ed.setText(ed.text.toString() + ":")
+        }
+
+        if (ed.text.length > 16) {
+            ed.setText(ed.text.toString().substring(0, 17))
+        }
+
+        ed.setSelection(ed.text.length)
+
+        ed.addTextChangedListener(textWatcher)
     }
 }
