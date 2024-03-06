@@ -6,9 +6,12 @@ import android.bluetooth.*
 import android.content.ContentValues
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.net.Uri
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
@@ -20,7 +23,10 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.widget.CompoundButtonCompat
 import com.ys.bt.databinding.ActivitySampleBinding
+import java.io.File
+import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Timer
@@ -34,9 +40,9 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
     private lateinit var btHelper: BTHelper
     private var dataList = ArrayList<BTSpecifyAdapter.BTData>()
     private var specifyMac = ""
-    private var timeTag = System.currentTimeMillis()
+    private var timeTag = 0L
     private var log = ""
-    private val savePerMinute = 1
+    private var savePerMinute = 60
     private val maxLog = 300
     private var timer: Timer = Timer()
     private var originSize = 0
@@ -70,31 +76,11 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
             }
 
             log += "$date\n${device.address} -> \n$data\n\n"
-            Log.e("scanBack", "device: ${device.address}, byteArray: $data")
+            Log.e("scanBack123", "device: ${device.address}, byteArray: $data")
 
             val current = System.currentTimeMillis()
             try {
-                if (abs(current - timeTag) > savePerMinute * 60 * 1000) {
-                    val values = ContentValues().apply {
-                        put(MediaStore.Images.Media.RELATIVE_PATH, "Download/BT_Log")
-                        put(MediaStore.Images.Media.DISPLAY_NAME, "BT_Log_${SimpleDateFormat("yyyy-MM-dd_HH.mm.ss").format(Date(timeTag))}.txt")
-                        put(MediaStore.Files.FileColumns.MIME_TYPE, "text/plain")
-                    }
-
-                    val resolver = contentResolver
-                    val uri: Uri? = resolver.insert(MediaStore.Files.getContentUri("external"), values)
-
-                    if (uri != null) {
-                        resolver.openOutputStream(uri)?.use { outputStream ->
-                            outputStream.write(log.toByteArray())
-                        }
-                    }
-
-                    timeTag = current
-                    log = ""
-                    Log.e("sys:", "local save succeed, path: ${uri?.path}")
-                    runOnUiThread { Toast.makeText(this, "local save succeed", Toast.LENGTH_SHORT).show() }
-                }
+                if (abs(current - timeTag) > savePerMinute * 60 * 1000) { save(current) }
             } catch (e: Exception) {
                 timeTag = current
                 Log.e("sys:", "local save failed: ${e.message}")
@@ -131,6 +117,12 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
             }
         }
     }
+
+    override fun onDestroy() {
+        save(System.currentTimeMillis())
+        super.onDestroy()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySampleBinding.inflate(layoutInflater)
@@ -163,13 +155,23 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
                 val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                 inputMethodManager.hideSoftInputFromWindow(binding.edSearch.windowToken, 0)
                 if (!checkBT()) return@setOnClickListener
+
+                btnScan.setBackgroundColor(resources.getColor(R.color.gray_6E6E6E))
+                btStop.setBackgroundColor(resources.getColor(R.color.orange_FF5733))
+
+                dataList.clear()
+                adapter.notifyDataSetChanged()
                 btHelper.scanDevice()
                 specifyMac = binding.edSearch.text.toString()
-
+                timeTag = System.currentTimeMillis()
+                timer = Timer()
                 timer.schedule(object : TimerTask() {
                     override fun run() {
                         runOnUiThread {
                             if (::adapter.isInitialized) {
+                                runOnUiThread {
+                                    tvTime.text = timeCount(savePerMinute, timeTag, System.currentTimeMillis())
+                                }
                                 adapter.notifyDataSetChanged()
                                 //binding.listView.smoothScrollToPosition( binding.listView.count - 1)
                             }
@@ -183,11 +185,72 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
                 inputMethodManager.hideSoftInputFromWindow(binding.edSearch.windowToken, 0)
                 if (!checkBT()) return@setOnClickListener
                 btHelper.stopScanDevice()
+                timer.cancel()
                 timer.purge()
+
+                btnScan.setBackgroundColor(resources.getColor(R.color.orange_FF5733))
+                btStop.setBackgroundColor(resources.getColor(R.color.gray_6E6E6E))
+            }
+
+            btSave.setOnClickListener {
+                if (timeTag != 0L) save(System.currentTimeMillis())
             }
 
             edSearch.addTextChangedListener(textWatcher)
         }
+    }
+
+    private fun save(current: Long) {
+        if (Build.VERSION.SDK_INT > 28) {
+            val values = ContentValues().apply {
+                put(MediaStore.Images.Media.RELATIVE_PATH, "Download/BT_Log")
+                put(MediaStore.Images.Media.DISPLAY_NAME, "BT_Log_${SimpleDateFormat("yyyy-MM-dd_HH.mm.ss").format(Date(timeTag))}.txt")
+                put(MediaStore.Files.FileColumns.MIME_TYPE, "text/plain")
+            }
+
+            val resolver = contentResolver
+            val uri: Uri? = resolver.insert(MediaStore.Files.getContentUri("external"), values)
+
+            if (uri != null) {
+                resolver.openOutputStream(uri)?.use { outputStream ->
+                    outputStream.write(log.toByteArray())
+                }
+            }
+            Log.e("sys:", "local save succeed, path: ${uri?.path}")
+        } else {
+            try {
+                val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                val btLogDir = File(downloadDir, "BT_Log")
+
+                if (!btLogDir.exists()) {
+                    btLogDir.mkdirs()
+                }
+
+                val file = File(btLogDir, "BT_Log_${SimpleDateFormat("yyyy-MM-dd_HH.mm.ss").format(Date(timeTag))}.txt")
+
+                FileOutputStream(file).use { outputStream ->
+                    outputStream.write(log.toByteArray())
+                }
+
+                Log.e("sys:", "local save succeed, path: ${file.path}")
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        timeTag = current
+        log = ""
+        runOnUiThread { Toast.makeText(this, "local save succeed", Toast.LENGTH_SHORT).show() }
+    }
+
+    private fun timeCount(setMinute: Int, origin: Long, current: Long): String {
+        val sec = setMinute * 60 - ((current - origin) / 1000)
+
+        val hours = sec / 3600
+        val minutes = (sec % 3600) / 60
+        val remainingSeconds = sec % 60
+
+        return String.format("%02d:%02d:%02d", hours, minutes, remainingSeconds)
     }
 
     private fun btStatusChange(isOpen: Boolean) {
