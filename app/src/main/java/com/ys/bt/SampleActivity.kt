@@ -42,7 +42,7 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
     private var specifyMac = ""
     private var timeTag = 0L
     private var log = ""
-    private var savePerMinute = 60
+    private var savePerMinute = 1
     private val maxLog = 300
     private var timer: Timer = Timer()
     private var originSize = 0
@@ -71,8 +71,7 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
             val date = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date())
             dataList.add(BTSpecifyAdapter.BTData(device.address, date, data))
             if (dataList.size > maxLog) {
-                val halfSize = dataList.size / 2
-                dataList = ArrayList(dataList.subList(halfSize, dataList.size))
+                dataList.clear()
             }
 
             log += "$date\n${device.address} -> \n$data\n\n"
@@ -169,15 +168,19 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
                     override fun run() {
                         runOnUiThread {
                             if (::adapter.isInitialized) {
-                                runOnUiThread {
-                                    tvTime.text = timeCount(savePerMinute, timeTag, System.currentTimeMillis())
+                                val current = System.currentTimeMillis()
+                                tvTime.text = timeCount(savePerMinute, timeTag, current)
+                                try {
+                                    if (abs(current - timeTag) > savePerMinute * 60 * 1000) { save(current) }
+                                } catch (e: Exception) {
+                                    timeTag = current
+                                    Log.e("sys:", "local save failed: ${e.message}")
                                 }
                                 adapter.notifyDataSetChanged()
-                                //binding.listView.smoothScrollToPosition( binding.listView.count - 1)
                             }
                         }
                     }
-                }, 0, if (specifyMac.isEmpty()) 2000 else 250)
+                }, 0, if (specifyMac.isEmpty()) 2000 else 500)
             }
 
             btStop.setOnClickListener {
@@ -270,40 +273,5 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
             ActivityCompat.requestPermissions(this, Array<String>(1) { permission }, TAG)
             false
         } else true
-    }
-
-    fun askPermission(): Boolean {
-        return if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-            true
-        } else {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 123)
-            false
-        }
-    }
-
-    @SuppressLint("SetTextI18n")
-    private fun formatBluetoothMac(ed: EditText) {
-        ed.removeTextChangedListener(textWatcher)
-
-        ed.setText(ed.text.replace(Regex("[^0-9A-Fa-f:]"), ""))
-        if (originSize == 1 && ed.text.length == 2) {
-            ed.setText(ed.text.toString() + ":")
-        }
-
-        when (originSize to ed.text.length) {
-            1 to 2 -> ed.setText(ed.text.toString() + ":")
-            4 to 5 -> ed.setText(ed.text.toString() + ":")
-            7 to 8 -> ed.setText(ed.text.toString() + ":")
-            10 to 11 -> ed.setText(ed.text.toString() + ":")
-            13 to 14 -> ed.setText(ed.text.toString() + ":")
-        }
-
-        if (ed.text.length > 16) {
-            ed.setText(ed.text.toString().substring(0, 17))
-        }
-
-        ed.setSelection(ed.text.length)
-
-        ed.addTextChangedListener(textWatcher)
     }
 }
