@@ -9,7 +9,7 @@ plugins {
  */
 
 android {
-    namespace 'com.ys.bt'
+    namespace 'com.orange.obd.test'
     compileSdk 33
 
     defaultConfig {

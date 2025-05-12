@@ -1,4 +1,4 @@
-package com.ys.bt
+package com.orange.obd.test
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
@@ -8,7 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.TextView
-import com.ys.bt.databinding.ItemBluetoothBinding
+import com.orange.obd.test.databinding.ItemBluetoothBinding
 
 class BTListAdapter(private var context: Context, private var list: ArrayList<BluetoothDevice>): ArrayAdapter<BluetoothDevice>(context, 0, list) {
     private var listener: BTListClickListener? = null

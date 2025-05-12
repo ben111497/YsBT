@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'com.ys.bt'
+    namespace 'com.orange.obd.test'
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.ys.bt"
+        applicationId "com.orange.obd.test"
         minSdk 28
         targetSdk 33
         versionCode 1

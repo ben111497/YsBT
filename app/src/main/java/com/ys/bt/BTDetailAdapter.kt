@@ -1,4 +1,4 @@
-package com.ys.bt
+package com.orange.obd.test
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothGattCharacteristic
@@ -10,8 +10,8 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.LinearLayout
 import android.widget.TextView
-import com.ys.bt.databinding.ItemDetailInnerBinding
-import com.ys.bt.databinding.ItemServiceDetailBinding
+import com.orange.obd.test.databinding.ItemDetailInnerBinding
+import com.orange.obd.test.databinding.ItemServiceDetailBinding
 
 class BTDetailAdapter(private var context: Context, private var list: List<BluetoothGattService>): ArrayAdapter<BluetoothGattService>(context, 0, list) {
     private var listener: BTListClickListener? = null

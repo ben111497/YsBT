@@ -1,20 +1,36 @@
-package com.ys.bt
+package com.orange.obd.test
 
 import android.Manifest
-import android.bluetooth.*
+import android.annotation.SuppressLint
+import android.app.Dialog
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattService
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.pm.PackageManager
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import com.ys.bt.databinding.ActivitySampleBinding
-import kotlin.collections.ArrayList
-import kotlin.collections.HashSet
+import com.orange.obd.test.databinding.ActivitySampleBinding
+import com.orange.obd.test.BTCallBack
+import com.orange.obd.test.BTHelper
+import com.orange.obd.test.Binary
+import com.orange.obd.test.utils.DialogController
+import com.orange.obd.test.utils.SqlController
+import com.orange.tpms.adapter.CommandAddAdapter
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.UUID
 
 class SampleActivity : AppCompatActivity(), BTCallBack {
     private lateinit var binding: ActivitySampleBinding
@@ -24,9 +40,23 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
     private val devices = HashSet<BluetoothDevice>()
     private val selectedDevices = ArrayList<BluetoothDevice>()
 
+    private var rxChannel = "00008D81-0000-1000-8000-00805F9B34FB"
+    private var txChannel = "00008D82-0000-1000-8000-00805F9B34FB"
+    private var rxCharacteristic: BluetoothGattCharacteristic? = null
+    private var txCharacteristic: BluetoothGattCharacteristic? = null
+
+    private val db = SqlController(this)
+    private var adapter: CommandAddAdapter? = null
+    private var addCmdList = ArrayList<MutableMap<String, Any>>()
+
     override fun onRequestPermission(list: ArrayList<String>) { checkAndRequestPermission(list[0], 0) }
 
-    override fun onScanDeviceResult(device: BluetoothDevice, scanRecord: Binary, rssi: Int) { devices.add(device) }
+    @SuppressLint("MissingPermission")
+    override fun onScanDeviceResult(device: BluetoothDevice, scanRecord: Binary, rssi: Int) {
+        if (device.name.lowercase().contains("obd")) {
+            devices.add(device)
+        }
+    }
 
     override fun onStatusChange(status: Int) {
         when (status) {
@@ -37,12 +67,24 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     override fun rx(uuid: String, value: ByteArray?) {
-        //TODO("Not yet implemented")
+        if (value == null) return
+        binding.svLog.post {
+            val txt = binding.tvLog.text.toString() + "\n${Date().format()} rx: ${Binary(value).toHEX()}"
+            binding.tvLog.text = txt
+            binding.svLog.fullScroll(View.FOCUS_DOWN)
+        }
     }
 
+    @SuppressLint("SetTextI18n")
     override fun tx(uuid: String, value: ByteArray?) {
-        //TODO("Not yet implemented")
+        if (value == null) return
+        binding.svLog.post {
+            val txt = binding.tvLog.text.toString() + "\n${Date().format()} tx: ${Binary(value).toHEX()}"
+            binding.tvLog.text = txt
+            binding.svLog.fullScroll(View.FOCUS_DOWN)
+        }
     }
 
     override fun onConnectionStateChange(isConnect: Boolean, serviceList: List<BluetoothGattService>?) {
@@ -64,6 +106,7 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySampleBinding.inflate(layoutInflater)
+        db.createAndCheckTable()
         setContentView(binding.root)
         init()
         setListener()
@@ -105,6 +148,7 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
                 if (!checkBT()) return@setOnClickListener
                 btHelper.disConnect()
                 clDetail.visibility = View.GONE
+                binding.edTx.setText("")
             }
 
             imgSearch.setOnClickListener {
@@ -141,9 +185,12 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
         if (!::deviceListAdapter.isInitialized) {
             deviceListAdapter = BTListAdapter(this, selectedDevices)
             deviceListAdapter.setListener(object: BTListAdapter.BTListClickListener {
+                @SuppressLint("MissingPermission")
                 override fun onClick(device: BluetoothDevice) {
                     Toast.makeText(this@SampleActivity, "Connecting..", Toast.LENGTH_SHORT).show()
                     btHelper.connect(device.address)
+                    binding.tvName.text = device.name.toString()
+                    binding.tvMac.text = device.address
                 }
             })
             binding.listView.adapter = deviceListAdapter
@@ -154,48 +201,80 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
     private fun detailFragment(serviceList: List<BluetoothGattService>) {
         binding.run {
             clDetail.visibility = View.VISIBLE
-            tvUUID.visibility = View.GONE
-            detailAdapter = BTDetailAdapter(this@SampleActivity, serviceList)
-            detailAdapter.setListener(object: BTDetailAdapter.BTListClickListener {
-                override fun onSend(service: BluetoothGattService, characteristic: BluetoothGattCharacteristic) {
-                    if (!checkPermission()) return
-                    binding.clInput.visibility = View.VISIBLE
 
-                    binding.btnSend.setOnClickListener {
-                        if (!btHelper.isBTOpen) return@setOnClickListener
+            serviceList.find { it.uuid == UUID.fromString("00007722-0000-1000-8000-00805f9b34fb") }?.let {
+                it.characteristics?.find { it.uuid == UUID.fromString(rxChannel) }?.let { x ->
+                    rxCharacteristic = x
+                    btHelper.descriptorChannelByCharacteristic(x)
+                }
 
-                        //因輸入沒有 byteArray 所以皆以 hex表示，若有需要再自行更改。
-                        val type = when (binding.rgType.checkedRadioButtonId) {
-                            binding.rbHex.id, binding.rbByteArray.id -> BTHelper.DataType.Hex
-                            else -> BTHelper.DataType.String
+                it.characteristics?.find { it.uuid == UUID.fromString(txChannel) }?.let { x ->
+                    txCharacteristic = x
+                }
+            }
+
+            btnSend.setOnClickListener {
+                if (!btHelper.isBTOpen) return@setOnClickListener
+                if (edTx.text.toString().isEmpty()) return@setOnClickListener
+
+                val type = BTHelper.DataType.Hex
+                btHelper.sendByCharacteristic(
+                    txCharacteristic ?: return@setOnClickListener,
+                    edTx.text.toString(),
+                    type
+                )
+                val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                inputMethodManager.hideSoftInputFromWindow(edTx.windowToken, 0)
+            }
+
+            btnClearCmd.setOnClickListener { tvLog.text = "" }
+
+            btnSaveCmd.setOnClickListener {
+                DialogController.showHint(this@SampleActivity, { it, dialog ->
+                    addCmdList = db.getAddCommand()
+                    Log.e(".obd", "addCmdList: ${addCmdList}")
+                    adapter = CommandAddAdapter(addCmdList)
+                    adapter?.l = object: CommandAddAdapter.Listener {
+                        override fun remove(id: String) {
+                            db.deleteAddCommand(id)
+                            Log.e(".obd", "Remove: ${id}")
+                            addCmdList.removeIf { it["id"].toString() == id }
+                            runOnUiThread { adapter?.notifyDataSetChanged() }
                         }
 
-                        //btHelper.send(service.uuid, characteristic.uuid, binding.edInput.text.toString(), type)
-                        btHelper.sendByCharacteristic(characteristic, binding.edInput.text.toString(), type)
-                        binding.edInput.setText("")
-                        binding.clInput.visibility = View.GONE
-
-                        val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                        inputMethodManager.hideSoftInputFromWindow(binding.edInput.windowToken, 0)
+                        override fun click(command: String) {
+                            binding.edTx.setText(command)
+                            dialog.dismiss()
+                        }
                     }
+                    it.lv.adapter = adapter
+                    adapter?.notifyDataSetChanged()
+                })
+            }
 
-                    binding.btnCancel.setOnClickListener {
-                        if (!btHelper.isBTOpen) return@setOnClickListener
-                        binding.edInput.setText("")
-                        binding.clInput.visibility = View.GONE
+            btnAddCmd.setOnClickListener {
+                if (edTx.text.toString().isEmpty()) return@setOnClickListener
+                if (addCmdList.any { it["command"].toString() == edTx.text.toString() }) return@setOnClickListener
+                Log.e(".obd", "增加command: ${edTx.text.toString()}")
+                db.addCommand(edTx.text.toString())
+                addCmdList = db.getAddCommand()
+            }
 
-                        val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                        inputMethodManager.hideSoftInputFromWindow(binding.edInput.windowToken, 0)
-                    }
+            tvLog.apply {
+                isLongClickable = true
+                setTextIsSelectable(true)
+            }
+
+            tvLog.setOnLongClickListener {
+                val text = tvLog.text.toString()
+                if (text.isNotEmpty()) {
+                    val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clip = ClipData.newPlainText("log", text)
+                    clipboard.setPrimaryClip(clip)
+                    Toast.makeText(this@SampleActivity, "已複製", Toast.LENGTH_SHORT).show()
                 }
-
-                override fun onGet(service: BluetoothGattService, characteristic: BluetoothGattCharacteristic) {
-                    //btHelper.descriptorChannel(service.uuid, characteristic.uuid)
-                    btHelper.descriptorChannelByCharacteristic(characteristic)
-                }
-            })
-            lvDetail.adapter = detailAdapter
-            detailAdapter.notifyDataSetChanged()
+                true
+            }
         }
     }
 
@@ -229,4 +308,6 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
             false
         } else true
     }
+
+    fun Date.format(): String = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS").format(this)
 }

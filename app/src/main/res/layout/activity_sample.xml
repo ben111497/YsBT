@@ -6,6 +6,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/black"
+        android:hardwareAccelerated="false"
         tools:context=".sample.SampleActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -92,123 +93,154 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent" android:visibility="gone"/>
+
     <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/clDetail"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layout_constraintTop_toTopOf="parent"
+        android:id="@+id/clDetail"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/white"
+        android:clickable="true"
+        android:focusable="true"
+        android:translationZ="99dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible">
+
+        <View
+            android:id="@+id/view2"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
             android:background="@color/black"
-            android:focusable="true"
-            android:clickable="true"
-            android:translationZ="5dp"
-            tools:visibility="visible"
-            app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" android:visibility="gone">
+            app:layout_constraintBottom_toBottomOf="@+id/edTx"
+            app:layout_constraintEnd_toEndOf="@+id/edTx"
+            app:layout_constraintStart_toStartOf="@+id/edTx" />
 
-        <ListView
-                android:id="@+id/lvDetail"
-                android:layout_width="match_parent"
-                android:divider="@android:color/transparent"
-                android:dividerHeight="0dp"
-                android:layout_height="0dp" app:layout_constraintTop_toBottomOf="@+id/tvUUID"
-                app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" android:layout_marginTop="8dp"/>
-        <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/clInput"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:background="#555555"
-                app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" android:visibility="gone" tools:visibility="gone">
-
-            <RadioGroup
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content" app:layout_constraintEnd_toEndOf="parent"
-                    android:orientation="horizontal"
-                    android:gravity="center"
-                    app:layout_constraintStart_toStartOf="parent" android:layout_marginTop="8dp"
-                    app:layout_constraintTop_toBottomOf="@+id/edInput" android:id="@+id/rgType"
-                    android:layout_marginStart="16dp" android:layout_marginEnd="16dp">
-                <RadioButton
-                        android:text="Hex"
-                        android:layout_marginEnd="16dp"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" android:id="@+id/rbHex"/>
-                <RadioButton
-                        android:text="String"
-                        android:layout_marginEnd="16dp"
-                        android:checked="true"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" android:id="@+id/rbString"/>
-                <RadioButton
-                        android:text="ByteArray"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" android:id="@+id/rbByteArray"/>
-            </RadioGroup>
-            <EditText
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:inputType="textPersonName"
-                    android:text=""
-                    android:hint="input"
-                    android:ems="10"
-                    android:id="@+id/edInput" android:layout_marginEnd="16dp"
-                    app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"
-                    android:layout_marginStart="16dp" app:layout_constraintTop_toTopOf="parent"
-                    android:layout_marginTop="16dp" android:minHeight="48dp"/>
-            <Button
-                    android:id="@+id/btnSend"
-                    android:text="Send"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:layout_constraintTop_toBottomOf="@+id/rgType"
-                    app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="16dp"
-                    app:layout_constraintBottom_toBottomOf="parent" android:layout_marginTop="8dp"
-                    android:layout_marginBottom="8dp"/>
-            <Button
-                    android:id="@+id/btnCancel"
-                    android:text="cancel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="16dp"
-                    app:layout_constraintBottom_toBottomOf="@+id/btnSend"
-                    app:layout_constraintTop_toTopOf="@+id/btnSend"/>
-        </androidx.constraintlayout.widget.ConstraintLayout>
         <ImageView
-                android:id="@+id/imgDisconnect"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" app:srcCompat="@android:drawable/btn_dialog"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" android:layout_marginTop="16dp"
-                android:layout_marginEnd="8dp"/>
+            android:id="@+id/imgDisconnect"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@android:drawable/btn_dialog" />
+
         <TextView
-                android:text="unKnow"
-                android:id="@+id/tvName"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:textSize="20dp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" android:layout_marginTop="16dp"
-                android:layout_marginStart="16dp" app:layout_constraintEnd_toStartOf="@+id/imgDisconnect"/>
+            android:id="@+id/tvName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:text="unKnow"
+            android:textColor="@color/black"
+            android:textSize="20dp"
+            app:layout_constraintEnd_toStartOf="@+id/imgDisconnect"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
         <TextView
-                android:id="@+id/tvMac"
-                android:text="-"
-                android:layout_width="0dp"
+            android:id="@+id/tvMac"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:text="-"
+            android:textColor="@color/black"
+            app:layout_constraintEnd_toStartOf="@+id/imgDisconnect"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvName" />
+
+        <Button
+            android:id="@+id/btnSend"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:text="傳送"
+            app:layout_constraintBottom_toBottomOf="@+id/edTx"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/edTx" />
+
+        <EditText
+            android:id="@+id/edTx"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            android:inputType="text"
+            android:textColor="@color/black"
+            android:drawableBottom="@color/black"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/btnSend"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <!-- layout.xml -->
+        <ScrollView
+            android:id="@+id/svLog"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            app:layout_constraintTop_toBottomOf="@+id/tvMac"
+            app:layout_constraintBottom_toTopOf="@+id/linearLayout"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <TextView
+                android:id="@+id/tvLog"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                app:layout_constraintTop_toBottomOf="@+id/tvName" android:layout_marginTop="8dp"
-                app:layout_constraintStart_toStartOf="parent"
-                android:layout_marginStart="16dp" app:layout_constraintEnd_toStartOf="@+id/imgDisconnect"/>
-        <TextView
-                android:id="@+id/tvUUID"
-                android:text="-"
-                android:layout_width="0dp"
+                android:background="@color/white"
+                android:padding="4dp"
+                android:textColor="@color/black"
+                android:gravity="top"
+                android:textSize="12sp"
+                android:lineSpacingExtra="4dp"
+                android:textIsSelectable="false" />
+        </ScrollView>
+
+        <LinearLayout
+            android:id="@+id/linearLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toTopOf="@+id/btnSend"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <Button
+                android:id="@+id/btnAddCmd"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                app:layout_constraintTop_toBottomOf="@+id/tvMac" app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="@+id/tvMac"
-                android:layout_marginStart="16dp" android:layout_marginTop="8dp"/>
+                android:layout_margin="2sp"
+                android:textSize="12sp"
+                android:layout_weight="1"
+                android:text="添加指令" />
+
+            <Button
+                android:id="@+id/btnSaveCmd"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4sp"
+                android:textSize="12sp"
+                android:layout_weight="1"
+                android:text="所有指令" />
+
+            <Button
+                android:id="@+id/btnClearCmd"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4sp"
+                android:textSize="12sp"
+                android:layout_weight="1"
+                android:text="清除指令" />
+
+        </LinearLayout>
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

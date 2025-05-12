@@ -1,4 +1,4 @@
-package com.ys.bt
+package com.orange.obd.test
 
 import org.junit.Test
 

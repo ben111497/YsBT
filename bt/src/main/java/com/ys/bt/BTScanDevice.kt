@@ -1,4 +1,4 @@
-package com.ys.bt
+package com.orange.obd.test
 
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanCallback
