@@ -2,6 +2,7 @@ package com.orange.obd.test
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.app.Dialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
@@ -14,17 +15,15 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.orange.obd.test.databinding.ActivitySampleBinding
-import com.orange.obd.test.BTCallBack
-import com.orange.obd.test.BTHelper
-import com.orange.obd.test.Binary
 import com.orange.obd.test.utils.DialogController
 import com.orange.obd.test.utils.SqlController
 import com.orange.tpms.adapter.CommandAddAdapter
@@ -198,6 +197,7 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
         deviceListAdapter.notifyDataSetChanged()
     }
 
+    @SuppressLint("SetTextI18n")
     private fun detailFragment(serviceList: List<BluetoothGattService>) {
         binding.run {
             clDetail.visibility = View.VISIBLE
@@ -213,12 +213,31 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
                 }
             }
 
+            binding.edTx.addTextChangedListener(object : TextWatcher {
+                private var lastText: String = ""
+
+                override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
+                    lastText = s.toString()
+                }
+
+                override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
+
+                override fun afterTextChanged(s: Editable) {
+                    val raw = s.toString().replace(" ", "")
+                    val formatted = raw.chunked(2).joinToString(" ")
+                    if (formatted != s.toString()) {
+                        val curPos = binding.edTx.selectionStart
+                        s.replace(0, s.length, formatted)
+                        val newPos = (curPos + (formatted.length - raw.length)).coerceIn(0, formatted.length)
+                        binding.edTx.setSelection(newPos)
+                    }
+                }
+            })
+
             btnSend.setOnClickListener {
                 if (!btHelper.isBTOpen) return@setOnClickListener
-                if (edTx.text.toString().trim().replace(" ", "").isEmpty()) return@setOnClickListener
                 val data = edTx.text.toString().trim().replace(" ", "")
-                edTx.setText(data.chunked(2).joinToString(" "))
-
+                if (data.isEmpty()) return@setOnClickListener
                 val type = BTHelper.DataType.Hex
                 btHelper.sendByCharacteristic(
                     txCharacteristic ?: return@setOnClickListener,
