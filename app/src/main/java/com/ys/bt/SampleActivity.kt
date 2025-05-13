@@ -215,25 +215,42 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
             }
 
             binding.edTx.addTextChangedListener(object : TextWatcher {
-                private var lastText: String = ""
+                private var isFormatting = false
+                private var lastFormatted = ""
+                private var isCenterSpace = false
+                private var lastCursor = 0
 
                 override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
-                    lastText = s.toString()
+                    if (isFormatting) return
+                    lastFormatted = s.toString()
+                    lastCursor = binding.edTx.selectionStart
+                    isCenterSpace = s.subSequence(start, start + count).toString() == " "
                 }
 
-                override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
+                override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+                }
 
                 override fun afterTextChanged(s: Editable) {
+                    Log.e(".test", "s.toString(): ${s.toString()}")
+                    if (isFormatting) {
+                        isFormatting = false
+                        return
+                    }
+
                     val raw = s.toString().replace(" ", "")
                     val formatted = raw.chunked(2).joinToString(" ")
+
                     if (formatted != s.toString()) {
-                        val curPos = binding.edTx.selectionStart
+                        val diff = formatted.length - (lastFormatted.length + if (isCenterSpace) 1 else 0)
+                        isFormatting = true
                         s.replace(0, s.length, formatted)
-                        val newPos = (curPos + (formatted.length - raw.length)).coerceIn(0, formatted.length)
+
+                        val newPos = (lastCursor + diff).coerceIn(0, formatted.length)
                         binding.edTx.setSelection(newPos)
                     }
                 }
             })
+
 
             btnSend.setOnClickListener {
                 if (!btHelper.isBTOpen) return@setOnClickListener
