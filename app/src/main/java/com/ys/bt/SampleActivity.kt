@@ -148,7 +148,7 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
                 if (!checkBT()) return@setOnClickListener
                 btHelper.disConnect()
                 clDetail.visibility = View.GONE
-                binding.edTx.setText("")
+                binding.edTx.post { binding.edTx.setText("") }
             }
 
             imgSearch.setOnClickListener {
@@ -215,12 +215,14 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
 
             btnSend.setOnClickListener {
                 if (!btHelper.isBTOpen) return@setOnClickListener
-                if (edTx.text.toString().isEmpty()) return@setOnClickListener
+                if (edTx.text.toString().trim().replace(" ", "").isEmpty()) return@setOnClickListener
+                val data = edTx.text.toString().trim().replace(" ", "")
+                edTx.setText(data.chunked(2).joinToString(" "))
 
                 val type = BTHelper.DataType.Hex
                 btHelper.sendByCharacteristic(
                     txCharacteristic ?: return@setOnClickListener,
-                    edTx.text.toString(),
+                    data,
                     type
                 )
                 val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -253,10 +255,10 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
             }
 
             btnAddCmd.setOnClickListener {
-                if (edTx.text.toString().isEmpty()) return@setOnClickListener
-                if (addCmdList.any { it["command"].toString() == edTx.text.toString() }) return@setOnClickListener
-                Log.e(".obd", "增加command: ${edTx.text.toString()}")
-                db.addCommand(edTx.text.toString())
+                if (edTx.text.toString().trim().replace(" ", "").isEmpty()) return@setOnClickListener
+                if (addCmdList.any { it["command"].toString() == edTx.text.toString().trim().replace(" ", "") }) return@setOnClickListener
+                Log.e(".obd", "增加command: ${edTx.text.toString().trim()}")
+                db.addCommand(edTx.text.toString().trim().replace(" ", ""))
                 addCmdList = db.getAddCommand()
             }
 
