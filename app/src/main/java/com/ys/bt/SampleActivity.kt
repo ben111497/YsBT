@@ -147,7 +147,8 @@ class SampleActivity : AppCompatActivity(), BTCallBack {
                 if (!checkBT()) return@setOnClickListener
                 btHelper.disConnect()
                 clDetail.visibility = View.GONE
-                binding.edTx.post { binding.edTx.setText("") }
+                edTx.setText("")
+                tvLog.text = ""
             }
 
             imgSearch.setOnClickListener {
